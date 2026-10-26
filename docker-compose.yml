@@ -1,0 +1,62 @@
+services:
+  # ========================================================
+  # Servicio de Base de Datos (PostgreSQL)
+  # ========================================================
+  db:
+    image: postgres:17-alpine
+    container_name: tout-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tout_db}
+      POSTGRES_USER: ${DB_USER:-tout_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tout_secret_password}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tout_user} -d ${DB_NAME:-tout_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - tout-network
+
+  # ========================================================
+  # Servicio de la Aplicación (Spring Boot API)
+  # ========================================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tout-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${DB_NAME:-tout_db}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-tout_user}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-tout_secret_password}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SERVER_PORT: "8080"
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    networks:
+      - tout-network
+
+# ========================================================
+# Volúmenes Persistentes
+# ========================================================
+volumes:
+  postgres_data:
+    driver: local
+
+# ========================================================
+# Redes Aisladas
+# ========================================================
+networks:
+  tout-network:
+    driver: bridge

@@ -1,0 +1,31 @@
+# Directorios de compilación y dependencias locales
+target/
+*.jar
+*.war
+
+# Control de versiones
+.git
+.gitignore
+.gitattributes
+
+# Configuraciones de IDEs y editores
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+
+# Logs y temporales
+*.log
+logs/
+temp/
+tmp/
+
+# Documentación y archivos del entorno
+HELP.md
+README.md
+.junie/
+.env
+.env.*
+docker-compose*.yml
