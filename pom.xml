@@ -28,102 +28,141 @@
     </scm>
     <properties>
         <java.version>25</java.version>
+        <!-- Versión de MapStruct para generación automática de mapeadores DTO <-> Entidad -->
+        <org.mapstruct.version>1.6.3</org.mapstruct.version>
+        <!-- Binding necesario para que Lombok y MapStruct funcionen juntos sin conflictos -->
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-h2console</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-flyway</artifactId>
-        </dependency>
+        <!-- ==================================================================== -->
+        <!-- 1. WEB & REST API                                                    -->
+        <!-- ==================================================================== -->
+        <!-- Proporciona soporte para controladores REST, JSON (Jackson) y servidor Tomcat embebido -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+
+        <!-- ==================================================================== -->
+        <!-- 2. PERSISTENCIA & JPA                                                -->
+        <!-- ==================================================================== -->
+        <!-- Abstracción de acceso a datos con Hibernate, JPA y gestión de transacciones -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- ==================================================================== -->
+        <!-- 3. MIGRACIONES DE BASE DE DATOS (FLYWAY)                             -->
+        <!-- ==================================================================== -->
+        <!-- Gestión y versionamiento automático de scripts de base de datos -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+        </dependency>
+        <!-- Soporte específico de Flyway para PostgreSQL -->
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
+        <!-- ==================================================================== -->
+        <!-- 4. BASES DE DATOS & DRIVERS                                          -->
+        <!-- ==================================================================== -->
+        <!-- Base de datos en memoria para desarrollo rápido y pruebas -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Interfaz web para visualizar y consultar la base de datos H2 localmente -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-h2console</artifactId>
+        </dependency>
+        <!-- Driver JDBC para conexión con base de datos PostgreSQL (producción/entorno local) -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- ==================================================================== -->
+        <!-- 5. PRODUCTIVIDAD Y MAPEO (LOMBOK & MAPSTRUCT)                        -->
+        <!-- ==================================================================== -->
+        <!-- Reduce código repetitivo (getters, setters, constructores, builder, etc.) en tiempo de compilación -->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Generador de código para mapeo rápido y con seguridad de tipos entre Entidades y DTOs -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${org.mapstruct.version}</version>
+        </dependency>
+
+        <!-- ==================================================================== -->
+        <!-- 6. TESTING                                                           -->
+        <!-- ==================================================================== -->
+        <!-- Pruebas para la capa web (MockMvc, WebMvcTest, etc.) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Pruebas para la capa de datos (DataJpaTest, repositorios, etc.) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa-test</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- Pruebas para verificar migraciones de Flyway -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-flyway-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
+            <!-- Plugin para empaquetar la aplicación como un ejecutable JAR/WAR autocontenido -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- Plugin del compilador: Configura Java y el orden de los procesadores de anotaciones -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>default-compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <annotationProcessorPaths>
-                                <path>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                </path>
-                            </annotationProcessorPaths>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>default-testCompile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                        <configuration>
-                            <annotationProcessorPaths>
-                                <path>
-                                    <groupId>org.projectlombok</groupId>
-                                    <artifactId>lombok</artifactId>
-                                </path>
-                            </annotationProcessorPaths>
-                        </configuration>
-                    </execution>
-                </executions>
+                <configuration>
+                    <!-- Inyección de dependencias de Spring por defecto en los mappers generados -->
+                    <compilerArgs>
+                        <arg>-Amapstruct.defaultComponentModel=spring</arg>
+                        <arg>-Amapstruct.unmappedTargetPolicy=IGNORE</arg>
+                    </compilerArgs>
+                    <annotationProcessorPaths>
+                        <!-- 1. Binding entre Lombok y MapStruct: asegura que los getters/setters generados por Lombok estén listos antes de MapStruct -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>${lombok-mapstruct-binding.version}</version>
+                        </path>
+                        <!-- 2. Procesador de Lombok -->
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                        <!-- 3. Procesador de MapStruct: genera las implementaciones de los mappers -->
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${org.mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
         </plugins>
     </build>
